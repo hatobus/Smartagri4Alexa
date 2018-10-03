@@ -15,3 +15,4 @@
 
 # My env
 .env
+*.zip

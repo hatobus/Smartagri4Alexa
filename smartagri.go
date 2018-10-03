@@ -1,85 +1,86 @@
 package main
 
 import (
-	"encoding/json"
-	"io/ioutil"
+	"context"
+	"errors"
 	"log"
-	"net/http"
 	"os"
-	"strings"
 
-	"github.com/davecgh/go-spew/spew"
+	"github.com/aws/aws-lambda-go/lambda"
+	alexa "github.com/ericdaugherty/alexa-skills-kit-golang"
 	"github.com/joho/godotenv"
 )
 
-type AgreData struct {
-	No               string `json:"no"`
-	Date             string `json:"date"`
-	Time             string `json:"time"`
-	Temperature      string `json:"temperature"`
-	Humidity         string `json:"humidity"`
-	SoilHumidity     string `json:"soil_humidity"`
-	Co2Concentration string `json:"co2_concentration"`
-	Wavelength       string `json:"wavelength"`
-	Illuminance      string `json:"illuminance"`
+var err = godotenv.Load()
+var AppID = os.Getenv("APPID")
+
+var ALX = &alexa.Alexa{ApplicationID: AppID, RequestHandler: &SmartAgri{}, IgnoreApplicationID: true, IgnoreTimestamp: true}
+
+type SmartAgri struct{}
+
+func (s *SmartAgri) OnSessionStarted(ctx context.Context, request *alexa.Request, session *alexa.Session, ctxPtr *alexa.Context, response *alexa.Response) error {
+
+	log.Printf("OnSessionStarted requestId=%s, sessionId=%s", request.RequestID, session.SessionID)
+
+	return nil
 }
 
-func getHouseinfoJSON(APIURL string) error {
+// Handle processes calls from Lambda
+func Handle(ctx context.Context, requestEnv *alexa.RequestEnvelope) (interface{}, error) {
+	return ALX.ProcessRequest(ctx, requestEnv)
+}
 
-	res, err := http.Get(APIURL)
-	if err != nil {
-		panic(err)
+// OnLaunch called with a reqeust is received of type LaunchRequest
+func (s *SmartAgri) OnLaunch(ctx context.Context, request *alexa.Request, session *alexa.Session, ctxPtr *alexa.Context, response *alexa.Response) error {
+	speechText := "こんにちは、これはローンチのテストです。"
+
+	log.Printf("OnLaunch requestId=%s, sessionId=%s", request.RequestID, session.SessionID)
+
+	// response.SetSimpleCard(cardTitle, speechText)
+	response.SetOutputText(speechText)
+	response.SetRepromptText(speechText)
+
+	response.ShouldSessionEnd = true
+
+	return nil
+}
+
+// OnIntent called with a reqeust is received of type IntentRequest
+func (s *SmartAgri) OnIntent(ctx context.Context, request *alexa.Request, session *alexa.Session, ctxPtr *alexa.Context, response *alexa.Response) error {
+
+	log.Printf("OnIntent requestId=%s, sessionId=%s, intent=%s", request.RequestID, session.SessionID, request.Intent.Name)
+
+	switch request.Intent.Name {
+	case "getParamIntent":
+		log.Println("getParamIntent triggered")
+		speechText := "ハローワールド、これはインテントのテストです。"
+
+		// response.SetSimpleCard(cardTitle, speechText)
+		response.SetOutputText(speechText)
+
+		log.Printf("Set Output speech, value now: %s", response.OutputSpeech.Text)
+	case "AMAZON.HelpIntent":
+		log.Println("何か助けが必要ですか")
+		speechText := "何か助けが必要ですか"
+
+		// response.SetSimpleCard("SmartAgri", speechText)
+		response.SetOutputText(speechText)
+		response.SetRepromptText(speechText)
+	default:
+		return errors.New("Invalid Intent")
 	}
 
-	defer res.Body.Close()
+	return nil
+}
 
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		log.Println(err)
-	}
+// OnSessionEnded called with a reqeust is received of type SessionEndedRequest
+func (s *SmartAgri) OnSessionEnded(ctx context.Context, request *alexa.Request, session *alexa.Session, ctxPtr *alexa.Context, response *alexa.Response) error {
 
-	// 返ってきたjsonじゃないjsonを}でsplitする
-	bodystring := strings.Split(string(body), "}")
+	log.Printf("OnSessionEnded requestId=%s, sessionId=%s", request.RequestID, session.SessionID)
 
-	// spew.Dump(bodystring)
-
-	var resdataNO1, resdataNO2, resdataNO3 []AgreData
-	var tmpdata AgreData
-
-	// } で splitしたので消えているから } をくっつけてjson unmarshall
-	for _, jsondata := range bodystring {
-		jsondata = jsondata + "}"
-		json.Unmarshal([]byte(jsondata), &tmpdata)
-
-		// 機械Noで分ける
-		switch tmpdata.No {
-		case "1":
-			resdataNO1 = append(resdataNO1, tmpdata)
-		case "2":
-			resdataNO2 = append(resdataNO2, tmpdata)
-		case "3":
-			resdataNO3 = append(resdataNO3, tmpdata)
-		default:
-			log.Fatal("Invalid value")
-		}
-
-	}
-
-	spew.Dump(resdataNO1)
-	spew.Dump(resdataNO2)
-	spew.Dump(resdataNO3)
-
-	return err
+	return nil
 }
 
 func main() {
-
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-	url := os.Getenv("APIURL")
-
-	getHouseinfoJSON(url)
-
+	lambda.Start(Handle)
 }
