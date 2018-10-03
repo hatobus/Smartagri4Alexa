@@ -112,18 +112,19 @@ func Getsmartagriinfo(slot map[string]alexa.IntentSlot) (string, error) {
 	var speech string
 
 	// 取得する機器が指定されなくてはいけないので確認する
-	if slot["machineNO"].Value == "" {
+	n := slot["machineNO"].Value
+	if n == "" {
 		return "取得したい機器のナンバーを一から三号機で指定してください", nil
 	}
 
-	n := slot["machineNO"].Value
-
+	// 指定した機器の情報を構造体で取得してくる
 	farmInfoMachineNO, err := GetFarmInfoMachineNO(n)
 	if err != nil {
 		return "", err
 	}
 
-	if slot["parameter"].Value == "" {
+	k := slot["parameter"].Value
+	if k == "" {
 		soilHumid, _ := strconv.ParseFloat(farmInfoMachineNO.SoilHumidity, 32)
 		soilHumid = (soilHumid / 1024) * 100
 		speech = n + "からの情報は、" +
@@ -137,6 +138,26 @@ func Getsmartagriinfo(slot map[string]alexa.IntentSlot) (string, error) {
 		return speech, nil
 	}
 
+	var resval string
+
+	switch k {
+	case "温度":
+		resval = farmInfoMachineNO.Temperature + "度"
+	case "湿度":
+		resval = farmInfoMachineNO.Humidity + "パーセント"
+	case "水分量":
+		soilHumid, _ := strconv.ParseFloat(farmInfoMachineNO.SoilHumidity, 32)
+		soilHumid = (soilHumid / 1024) * 100
+		resval = strconv.FormatFloat(soilHumid, 'f', 2, 64) + "パーセント"
+	case "二酸化炭素濃度":
+		resval = farmInfoMachineNO.Co2Concentration + "ppm"
+	case "照度":
+		resval = farmInfoMachineNO.Illuminance + "ルクス"
+	}
+
+	resval = resval + "です。この情報は" + farmInfoMachineNO.Time + "に取得された情報です。"
+
+	speech = n + "の" + k + "は、" + resval
 	return speech, nil
 }
 
@@ -189,6 +210,7 @@ func getFarmInfoFromAPI(machineNO string) (AgriData, error) {
 		}
 
 	}
+
 	log.Println(resdata[len(resdata)-1])
 	return resdata[len(resdata)-1], nil
 }
