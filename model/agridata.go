@@ -2,6 +2,7 @@ package model
 
 type AgriData struct {
 	No               string `json:"no"`
+	MACAddr          string `json:"mac_addr"`
 	Date             string `json:"date"`
 	Time             string `json:"time"`
 	Temperature      string `json:"temperature"`

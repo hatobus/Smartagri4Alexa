@@ -2,6 +2,7 @@ package outbound
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -47,22 +48,21 @@ func Getsmartagriinfo(slot map[string]alexa.IntentSlot) (string, error) {
 
 	switch k {
 	case "温度":
-		resval = farmInfoMachineNO.Temperature + "度"
+		resval = fmt.Sprintf("%s度", farmInfoMachineNO.Temperature)
 	case "湿度":
-		resval = farmInfoMachineNO.Humidity + "パーセント"
+		resval = fmt.Sprintf("%sパーセント", farmInfoMachineNO.Humidity)
 	case "水分量":
 		soilHumid, _ := strconv.ParseFloat(farmInfoMachineNO.SoilHumidity, 32)
 		soilHumid = (soilHumid / 1024) * 100
-		resval = strconv.FormatFloat(soilHumid, 'f', 2, 64) + "パーセント"
+		resval = fmt.Sprintf("%fパーセント", soilHumid)
 	case "二酸化炭素濃度":
-		resval = farmInfoMachineNO.Co2Concentration + "ppm"
+		resval = fmt.Sprintf("%sppm", farmInfoMachineNO.Co2Concentration)
 	case "照度":
-		resval = farmInfoMachineNO.Illuminance + "ルクス"
+		resval = fmt.Sprintf("%sルクス", farmInfoMachineNO.Illuminance)
 	}
 
-	resval = resval + "です。この情報は" + farmInfoMachineNO.Time + "に取得された情報です。"
+	speech = fmt.Sprintf("%sの%sは%sです。この情報は%sに取得された情報です。", n, k, resval, farmInfoMachineNO.Time)
 
-	speech = n + "の" + k + "は、" + resval
 	return speech, nil
 }
 
@@ -78,6 +78,7 @@ func GetFarmInfoMachineNO(machine string) (model.AgriData, error) {
 		machineNO = "3"
 	}
 
+	// DynamoDBに置き換える
 	farmstruct, err := getFarmInfoFromAPI(machineNO, os.Getenv("APIURL"))
 
 	return farmstruct, err
