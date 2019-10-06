@@ -2,18 +2,6 @@ package model
 
 import "time"
 
-// {
-//   "no": "",
-//   "mac_addr": "",
-//   "gettime": "",
-//   "temperature": 0,
-//   "humidity": 0,
-//   "soil_humidity": 0,
-//   "co2_concentration": 0,
-//   "wavelength": 0,
-//   "illuminance": 0
-// }
-
 type IoTTable struct {
 	No               string    `dynamo:"no"`
 	MACAddr          string    `dynamo:"mac_addr"`
