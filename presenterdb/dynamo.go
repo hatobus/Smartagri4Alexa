@@ -10,7 +10,11 @@ import (
 	"github.com/hatobus/UKEMOCHI/model"
 )
 
-var c = credentials.NewStaticCredentials(os.Getenv(("AWS_ACCESS_KEY")), os.Getenv("AWS_SECRET_ACCESS_KEY"), "") // 最後の引数は[セッショントークン]今回はなしで
+var c = credentials.NewStaticCredentials(
+	os.Getenv(("AWS_ACCESS_KEY")),
+	os.Getenv("AWS_SECRET_ACCESS_KEY"),
+	"",
+) // 最後の引数は[セッショントークン]今回はなしで
 
 var db = dynamo.New(session.New(), &aws.Config{
 	Credentials: c,
@@ -22,7 +26,7 @@ var table = db.Table(os.Getenv("DYNAMO_TABLE"))
 func GetLatestDataFromDynamoDB(machineNO string) (*model.IoTTable, error) {
 	record := &model.IoTTable{}
 
-	if err := table.Get("no", machineNO).All(record); err != nil {
+	if err := table.Get("no", machineNO).One(record); err != nil {
 		return nil, err
 	}
 
