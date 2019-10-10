@@ -51,6 +51,4 @@ func GetSmartAgriInfoFromMachineNO(slot map[string]alexa.IntentSlot) (string, er
 	speech = fmt.Sprintf("%sの%sは%sです。この情報は%sに取得された情報です。", n, k, resval, farmInfoMachineNO.Gettime)
 
 	return speech, nil
-
-	return "", nil
 }
