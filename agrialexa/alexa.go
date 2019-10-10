@@ -37,11 +37,17 @@ func (s *SmartAgri) OnLaunch(ctx context.Context, request *alexa.Request, sessio
 // OnIntent called with a reqeust is received of type IntentRequest
 func (s *SmartAgri) OnIntent(ctx context.Context, request *alexa.Request, session *alexa.Session, ctxPtr *alexa.Context, response *alexa.Response) error {
 
-	logging.Log().Info("OnIntent started", zap.Strings("OnIntent requestId=%s, sessionId=%s, intent=%s", []string{request.RequestID, session.SessionID, request.Intent.Name}))
+	logging.Log().Info(
+		"OnIntent started",
+		zap.Strings(
+			"OnIntent requestId=%s, sessionId=%s, intent=%s",
+			[]string{request.RequestID, session.SessionID, request.Intent.Name},
+		),
+	)
 
 	switch request.Intent.Name {
 	case "getParamIntent":
-		speechText, err := outbound.Getsmartagriinfo(request.Intent.Slots)
+		speechText, err := outbound.GetSmartAgriInfoFromMachineNO(request.Intent.Slots)
 		if err != nil {
 			fmt.Println(err)
 			speechText = "すみません、情報を取得できませんでした。"
