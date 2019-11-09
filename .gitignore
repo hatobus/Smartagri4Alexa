@@ -16,3 +16,4 @@
 # My env
 .env
 *.zip
+*.csv

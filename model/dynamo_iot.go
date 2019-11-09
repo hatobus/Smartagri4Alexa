@@ -4,6 +4,7 @@ import "time"
 
 type IoTTable struct {
 	No               string    `dynamo:"no"`
+	MachineNo        int64     `dynamo:"machine_no"`
 	MACAddr          string    `dynamo:"mac_addr"`
 	Gettime          time.Time `dynamo:"gettime"`
 	Temperature      float64   `dynamo:"temperature"`
